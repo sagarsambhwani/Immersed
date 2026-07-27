@@ -1,97 +1,169 @@
-import React from 'react';
-import { EyeOff, Volume2, Moon } from 'lucide-react';
-import FocusTimer from './FocusTimer';
-import TaskPlanner from './TaskPlanner';
+import React, { useState } from 'react';
+import { 
+  HelpCircle, 
+  TrendingUp, 
+  Target, 
+  Clock, 
+  Sparkles, 
+  RotateCcw, 
+  Heart,
+  ChevronRight
+} from 'lucide-react';
 
-export default function RightSidebar({
-  hideLeftSidebar,
-  setHideLeftSidebar,
-  isCalmSounds,
-  setIsCalmSounds,
-  isDndMode,
-  setIsDndMode,
-}) {
+export default function RightSidebar({ onNavigateTab }) {
+  const [selectedMood, setSelectedMood] = useState('Calm');
+
+  const moods = [
+    { label: 'Calm', emoji: '😌' },
+    { label: 'Stressed', emoji: '😰' },
+    { label: 'Overwhelmed', emoji: '😵' },
+    { label: 'Tired', emoji: '🥱' },
+    { label: 'Scattered', emoji: '😵‍💫' },
+    { label: 'Other', emoji: '✏️' }
+  ];
+
   return (
     <aside className="right-sidebar">
-      {/* 1. Header */}
-      <div className="right-sidebar-header">
-        <h2 className="right-sidebar-title">Focus Tools</h2>
-        <span className="right-sidebar-subtitle">Built for ADHD brains</span>
+      {/* 1. WHY THIS RECOMMENDATION? */}
+      <div className="right-card recommendation-card">
+        <div className="card-header-row">
+          <div className="card-header-title">
+            <HelpCircle size={16} className="card-header-icon" />
+            <h3>Why this recommendation?</h3>
+          </div>
+        </div>
+
+        <div className="recommendation-list">
+          <div className="rec-item">
+            <div className="rec-icon icon-purple">
+              <TrendingUp size={16} />
+            </div>
+            <div className="rec-text">
+              <h4>You made good progress yesterday</h4>
+              <p>You completed 3/4 topics in this chapter.</p>
+            </div>
+          </div>
+
+          <div className="rec-item">
+            <div className="rec-icon icon-green">
+              <Target size={16} />
+            </div>
+            <div className="rec-text">
+              <h4>You're close to a milestone</h4>
+              <p>Finish this chapter to complete Database Design module.</p>
+            </div>
+          </div>
+
+          <div className="rec-item">
+            <div className="rec-icon icon-orange">
+              <Clock size={16} />
+            </div>
+            <div className="rec-text">
+              <h4>Your best focus time is now</h4>
+              <p>You usually do your best work between 9–11 AM.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rec-banner-insight">
+          <div className="insight-text-col">
+            <p>You're <strong>60% more likely</strong> to finish what you start when you continue the next day.</p>
+          </div>
+          <Sparkles size={20} className="insight-sparkle-icon" />
+        </div>
       </div>
 
-      {/* 2. Pomodoro Timer */}
-      <FocusTimer />
+      {/* 2. YOUR PATTERNS (THIS WEEK) */}
+      <div className="right-card patterns-card">
+        <div className="card-header-row">
+          <h3>Your patterns <span className="sub-tag">(This week)</span></h3>
+          <button 
+            className="view-all-link"
+            onClick={() => onNavigateTab && onNavigateTab('insights')}
+          >
+            View all
+          </button>
+        </div>
 
-      {/* 3. Reduce Distractions Card */}
-      <div className="widget-card">
-        <span className="widget-title">Reduce Distractions</span>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
-          {/* Toggle Left Sidebar */}
-          <div className="toggle-item">
-            <div className="toggle-label-row">
-              <EyeOff size={16} style={{ color: 'var(--accent-purple)' }} />
-              <span>Hide Sidebar</span>
+        <div className="patterns-list">
+          <div className="pattern-row">
+            <div className="pattern-left">
+              <Clock size={15} className="pattern-icon icon-purple" />
+              <span>Most productive time</span>
             </div>
-            <label className="switch-control">
-              <input 
-                type="checkbox" 
-                checked={hideLeftSidebar}
-                onChange={() => setHideLeftSidebar(!hideLeftSidebar)}
-              />
-              <span className="switch-slider"></span>
-            </label>
+            <span className="pattern-val highlight-bold">9:00 – 11:00 AM</span>
           </div>
 
-          {/* Toggle Ambient sounds */}
-          <div className="toggle-item">
-            <div className="toggle-label-row">
-              <Volume2 size={16} style={{ color: 'var(--accent-cyan)' }} />
-              <span>Calm Sounds</span>
+          <div className="pattern-row">
+            <div className="pattern-left">
+              <Target size={15} className="pattern-icon icon-green" />
+              <span>Focus sessions</span>
             </div>
-            <label className="switch-control">
-              <input 
-                type="checkbox" 
-                checked={isCalmSounds}
-                onChange={() => setIsCalmSounds(!isCalmSounds)}
-              />
-              <span className="switch-slider"></span>
-            </label>
+            <div className="pattern-val-group">
+              <span className="pattern-val">7</span>
+              <span className="trend-badge trend-up">↑ 2</span>
+            </div>
           </div>
 
-          {/* Toggle DND mode */}
-          <div className="toggle-item">
-            <div className="toggle-label-row">
-              <Moon size={16} style={{ color: 'var(--accent-pink)' }} />
-              <span>DND Mode</span>
+          <div className="pattern-row">
+            <div className="pattern-left">
+              <TrendingUp size={15} className="pattern-icon icon-orange" />
+              <span>Topics explored</span>
             </div>
-            <label className="switch-control">
-              <input 
-                type="checkbox" 
-                checked={isDndMode}
-                onChange={() => setIsDndMode(!isDndMode)}
-              />
-              <span className="switch-slider"></span>
-            </label>
+            <div className="pattern-val-group">
+              <span className="pattern-val">4</span>
+              <span className="trend-badge trend-up">↑ 1</span>
+            </div>
+          </div>
+
+          <div className="pattern-row">
+            <div className="pattern-left">
+              <RotateCcw size={15} className="pattern-icon icon-blue" />
+              <span>Context switches</span>
+            </div>
+            <div className="pattern-val-group">
+              <span className="pattern-val">5</span>
+              <span className="trend-badge trend-down">↓ 2</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 4. Task Planner checklist */}
-      <TaskPlanner />
-
-      {/* 5. Motivation Streak Card */}
-      <div className="motivation-card">
-        <div className="streak-info-box">
-          <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Learning Streak</span>
-          <span className="streak-val-text">12 Days 🔥</span>
+      {/* 3. MIND CHECK-IN */}
+      <div className="right-card mind-checkin-card">
+        <div className="card-header-row">
+          <div>
+            <h3>Mind check-in</h3>
+            <p className="card-sub-desc">How are you feeling right now?</p>
+          </div>
         </div>
-        <span className="motivation-character" role="img" aria-label="brain mascot">🧠</span>
+
+        <div className="mood-pills-grid">
+          {moods.map((mood) => {
+            const isSelected = selectedMood === mood.label;
+            return (
+              <button
+                key={mood.label}
+                className={`mood-pill ${isSelected ? 'selected' : ''}`}
+                onClick={() => setSelectedMood(mood.label)}
+              >
+                <span className="mood-emoji">{mood.emoji}</span>
+                <span className="mood-label">{mood.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 6. Inspirational quote box */}
-      <div className="motivation-quote-card">
-        <p>“Progress, not perfection. One step at a time.” 💜</p>
+      {/* 4. MINDFUL QUOTE BANNER */}
+      <div className="mindful-quote-card">
+        <div className="quote-icon-top">
+          <Heart size={16} fill="var(--accent-purple)" stroke="none" />
+        </div>
+        <p className="quote-body">
+          Clarity comes from small decisions that move you forward.
+        </p>
+        <span className="quote-footer">One step at a time. ✨</span>
       </div>
     </aside>
   );
