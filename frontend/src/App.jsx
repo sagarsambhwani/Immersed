@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import RightSidebar from './components/RightSidebar';
+import DashboardView from './components/DashboardView';
+import ProjectsView from './components/ProjectsView';
+import KnowledgeView from './components/KnowledgeView';
+import InsightsView from './components/InsightsView';
 import ChatWindow from './components/ChatWindow';
 import SettingsModal from './components/SettingsModal';
-import RightSidebar from './components/RightSidebar';
 import BreathingWidget from './components/BreathingWidget';
+import TaskPlanner from './components/TaskPlanner';
+import FocusTimer from './components/FocusTimer';
 import { ambientNoise } from './services/AmbientNoise';
 import {
   getSessions,
@@ -14,13 +21,17 @@ import {
 } from './services/api';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Sessions & Chat States
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   
-  // Modals and sidebars visibility states
+  // Modals & Sound States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBreathingOpen, setIsBreathingOpen] = useState(false);
   const [hideLeftSidebar, setHideLeftSidebar] = useState(false);
@@ -29,10 +40,19 @@ export default function App() {
   const [isDndMode, setIsDndMode] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
 
-  // Load all sessions at startup
+  // Load sessions at startup
   useEffect(() => {
     loadSessions();
   }, []);
+
+  // Dark Mode class toggle on body element
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [isDarkMode]);
 
   // Sync message histories when active session changes
   useEffect(() => {
@@ -57,7 +77,7 @@ export default function App() {
     };
   }, [isCalmSounds]);
 
-  // DND Mode auto-collapses left sidebar to minimize distraction
+  // DND Mode auto-collapses left sidebar
   useEffect(() => {
     if (isDndMode) {
       setHideLeftSidebar(true);
@@ -97,8 +117,10 @@ export default function App() {
     try {
       const newSession = await createSession();
       await loadSessions(newSession.id);
+      return newSession.id;
     } catch (err) {
       console.error('Failed to create new chat session', err);
+      return null;
     }
   };
 
@@ -143,12 +165,13 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (text) => {
-    if (!activeSessionId || isGenerating) return;
+  const handleSendMessage = async (text, customSessionId = null) => {
+    const targetSessionId = customSessionId || activeSessionId;
+    if (!targetSessionId || isGenerating) return;
 
     const tempUserMsg = {
       id: `temp-user-${Date.now()}`,
-      session_id: activeSessionId,
+      session_id: targetSessionId,
       role: 'user',
       content: text,
       created_at: new Date().toISOString(),
@@ -162,7 +185,7 @@ export default function App() {
     let currentAccumulated = '';
 
     await sendMessageStream(
-      activeSessionId,
+      targetSessionId,
       text,
       (chunk) => {
         currentAccumulated += chunk;
@@ -175,9 +198,9 @@ export default function App() {
         
         const errorMsg = {
           id: `temp-error-${Date.now()}`,
-          session_id: activeSessionId,
+          session_id: targetSessionId,
           role: 'assistant',
-          content: `⚠️ Error generating response: ${error.message}. Please check your model configuration and API keys.`,
+          content: `⚠️ Error generating response: ${error.message}. Please verify backend status.`,
           created_at: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -185,12 +208,35 @@ export default function App() {
       async () => {
         setIsGenerating(false);
         setStreamingContent('');
-        await loadMessages(activeSessionId);
+        await loadMessages(targetSessionId);
       }
     );
   };
 
-  // Toggle full centered workspace by hiding both sidebars
+  // Start chat session directly from Dashboard prompt or pills
+  const handleStartChatPrompt = async (promptText) => {
+    setActiveTab('chat');
+    let targetId = activeSessionId;
+
+    if (!targetId) {
+      targetId = await handleCreateSession();
+    }
+
+    if (targetId) {
+      setActiveSessionId(targetId);
+      setTimeout(() => {
+        handleSendMessage(promptText, targetId);
+      }, 200);
+    }
+  };
+
+  const handleNavigateTab = (tabId, optionalPrompt = null) => {
+    setActiveTab(tabId);
+    if (optionalPrompt && tabId === 'chat') {
+      handleStartChatPrompt(optionalPrompt);
+    }
+  };
+
   const handleToggleFocusMode = () => {
     const nextVal = !isFocusMode;
     setIsFocusMode(nextVal);
@@ -203,7 +249,10 @@ export default function App() {
 
   return (
     <div className={containerClass}>
+      {/* 1. LEFT SIDEBAR */}
       <Sidebar
+        activeTab={activeTab}
+        onSelectTab={handleNavigateTab}
         sessions={sessions}
         activeSessionId={activeSessionId}
         onSelectSession={setActiveSessionId}
@@ -212,27 +261,92 @@ export default function App() {
         onRenameSession={handleRenameSession}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenBreathing={() => setIsBreathingOpen(true)}
-      />
-
-      <ChatWindow
-        activeSession={activeSession}
-        messages={messages}
-        streamingContent={streamingContent}
-        isGenerating={isGenerating}
-        onSendMessage={handleSendMessage}
         isFocusMode={isFocusMode}
         onToggleFocusMode={handleToggleFocusMode}
-      />
-
-      <RightSidebar
-        hideLeftSidebar={hideLeftSidebar}
-        setHideLeftSidebar={setHideLeftSidebar}
         isCalmSounds={isCalmSounds}
         setIsCalmSounds={setIsCalmSounds}
-        isDndMode={isDndMode}
-        setIsDndMode={setIsDndMode}
       />
 
+      {/* 2. CENTER CONTENT WRAPPER */}
+      <div className="main-content-area">
+        <Header 
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        />
+
+        <main className="tab-view-content">
+          {activeTab === 'home' && (
+            <DashboardView
+              onNavigateTab={handleNavigateTab}
+              onStartChatPrompt={handleStartChatPrompt}
+            />
+          )}
+
+          {activeTab === 'projects' && (
+            <ProjectsView onStartChatPrompt={handleStartChatPrompt} />
+          )}
+
+          {activeTab === 'chat' && (
+            <ChatWindow
+              activeSession={activeSession}
+              messages={messages}
+              streamingContent={streamingContent}
+              isGenerating={isGenerating}
+              onSendMessage={handleSendMessage}
+              isFocusMode={isFocusMode}
+              onToggleFocusMode={handleToggleFocusMode}
+            />
+          )}
+
+          {activeTab === 'knowledge' && (
+            <KnowledgeView onStartChatPrompt={handleStartChatPrompt} />
+          )}
+
+          {activeTab === 'focus' && (
+            <div className="tab-view-container">
+              <h2 className="view-title">Focus & Deep Work</h2>
+              <p className="view-subtitle">Gamified pomodoro timer and session planning.</p>
+              <div style={{ marginTop: '20px', maxWidth: '400px' }}>
+                <FocusTimer />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'tasks' && (
+            <div className="tab-view-container">
+              <h2 className="view-title">Tasks & Checklist</h2>
+              <p className="view-subtitle">Chunk down large study targets into actionable micro-goals.</p>
+              <div style={{ marginTop: '20px', maxWidth: '500px' }}>
+                <TaskPlanner />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <div className="tab-view-container">
+              <h2 className="view-title">Study Calendar</h2>
+              <p className="view-subtitle">Plan upcoming chapters and focus milestones.</p>
+              <div className="calendar-placeholder-card">
+                <h3>📅 July 2026 Focus Schedule</h3>
+                <p>Peak performance window locked for <strong>9:00 AM – 11:00 AM daily</strong>.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'insights' && (
+            <InsightsView />
+          )}
+
+          {(activeTab === 'resources' || activeTab === 'templates') && (
+            <KnowledgeView onStartChatPrompt={handleStartChatPrompt} />
+          )}
+        </main>
+      </div>
+
+      {/* 3. RIGHT SIDEBAR */}
+      <RightSidebar onNavigateTab={handleNavigateTab} />
+
+      {/* 4. MODALS */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
