@@ -263,6 +263,7 @@ export default function App() {
         onOpenBreathing={() => setIsBreathingOpen(true)}
         isFocusMode={isFocusMode}
         onToggleFocusMode={handleToggleFocusMode}
+        onToggleLeftSidebar={() => setHideLeftSidebar(!hideLeftSidebar)}
         isCalmSounds={isCalmSounds}
         setIsCalmSounds={setIsCalmSounds}
       />
@@ -272,6 +273,10 @@ export default function App() {
         <Header 
           isDarkMode={isDarkMode}
           onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          hideLeftSidebar={hideLeftSidebar}
+          onToggleLeftSidebar={() => setHideLeftSidebar(!hideLeftSidebar)}
+          hideRightSidebar={hideRightSidebar}
+          onToggleRightSidebar={() => setHideRightSidebar(!hideRightSidebar)}
         />
 
         <main className="tab-view-content">
@@ -344,7 +349,10 @@ export default function App() {
       </div>
 
       {/* 3. RIGHT SIDEBAR */}
-      <RightSidebar onNavigateTab={handleNavigateTab} />
+      <RightSidebar 
+        onNavigateTab={handleNavigateTab} 
+        onToggleRightSidebar={() => setHideRightSidebar(!hideRightSidebar)}
+      />
 
       {/* 4. MODALS */}
       <SettingsModal

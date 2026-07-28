@@ -1,281 +1,147 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  BookOpen, 
-  Lightbulb, 
-  Sun, 
-  ChevronRight, 
-  FileText, 
-  MessageSquare, 
-  Mic, 
-  Send,
-  MoreHorizontal
-} from 'lucide-react';
+import { Sparkles, Search, MessageSquare, BookOpen, Clock, Lightbulb, Zap, ArrowRight } from 'lucide-react';
+import RecommendationCard from './RecommendationCard';
+import ConversationRow from './ConversationRow';
+import InsightCard from './InsightCard';
 
-export default function DashboardView({ onNavigateTab, onStartChatPrompt }) {
-  const [quickPromptText, setQuickPromptText] = useState('');
+export default function DashboardView({ onNavigateTab, onStartChatPrompt, userProfile = { name: 'Aryan' } }) {
+  const [heroPromptText, setHeroPromptText] = useState('');
 
-  const handlePromptSubmit = (e) => {
+  const handleHeroSubmit = (e) => {
     e.preventDefault();
-    if (quickPromptText.trim()) {
-      onStartChatPrompt(quickPromptText);
-      setQuickPromptText('');
+    if (heroPromptText.trim()) {
+      onStartChatPrompt(heroPromptText);
+      setHeroPromptText('');
     }
   };
 
-  const handlePillClick = (prompt) => {
-    onStartChatPrompt(prompt);
-  };
+  const sampleRecentConversations = [
+    {
+      id: 'c1',
+      title: 'Database Indexing & B-Trees',
+      preview: 'You analyzed query execution plans and index scan trade-offs.',
+      time: '10m ago',
+      prompt: 'Continue Database Indexing and B-Tree discussion'
+    },
+    {
+      id: 'c2',
+      title: 'System Architecture & Sharding',
+      preview: 'Evaluated horizontal partitioning strategies for microservices.',
+      time: 'Yesterday',
+      prompt: 'Resume System Architecture and Sharding topic'
+    },
+    {
+      id: 'c3',
+      title: 'React State Management Patterns',
+      preview: 'Discussed context API, Zustand, and atomic state models.',
+      time: '2 days ago',
+      prompt: 'Review React State Management Patterns'
+    }
+  ];
 
   return (
-    <div className="dashboard-view">
-      {/* 1. HERO SUGGESTED CARD */}
-      <section className="suggested-hero-card">
-        <div className="hero-content">
-          <div className="suggested-badge">
-            <Sparkles size={14} className="badge-sparkle" />
-            <span>Suggested for today</span>
-          </div>
-
-          <h2 className="hero-title">
-            Continue System Design Interview Prep?
-          </h2>
-
-          <p className="hero-subtitle">
-            You were making strong progress yesterday and you're close to finishing this section.
+    <div className="dashboard-mentor-container">
+      {/* 1. HERO SECTION CENTERPIECE */}
+      <section className="mentor-hero-section">
+        <div className="mentor-greeting-header">
+          <h1 className="greeting-title">
+            Good morning, {userProfile.name} <span className="wave-emoji">👋</span>
+          </h1>
+          <p className="greeting-subtitle">
+            What would you like to work through today?
           </p>
-
-          <ul className="hero-checklist">
-            <li>
-              <span className="check-dot">✓</span>
-              <span><strong>Stopped at:</strong> Database Indexing (Chapter 4)</span>
-            </li>
-            <li>
-              <span className="check-dot">✓</span>
-              <span><strong>Estimated time to complete:</strong> 25 min</span>
-            </li>
-            <li>
-              <span className="check-dot">✓</span>
-              <span>Continuing today builds real momentum</span>
-            </li>
-          </ul>
-
-          <div className="hero-action-row">
-            <button 
-              className="btn-primary-purple"
-              onClick={() => onNavigateTab('chat', 'Continue System Design Interview Prep: Database Indexing (Chapter 4)')}
-            >
-              Continue <ArrowRight size={16} />
-            </button>
-            <button className="btn-outline">Not today</button>
-            <button className="btn-ghost">Tell me why</button>
-          </div>
         </div>
 
-        <div className="hero-illustration">
-          <div className="card-graphic-3d">
-            <div className="graphic-header">
-              <span className="graphic-tag">Chapter 4</span>
-            </div>
-            <h4 className="graphic-title">Database Indexing</h4>
-            <div className="graphic-flowchart-preview">
-              <div className="flow-node node-1">B-Tree</div>
-              <div className="flow-line"></div>
-              <div className="flow-node node-2">Hash Index</div>
-            </div>
-          </div>
-          <button className="hero-more-btn" title="Options">
-            <MoreHorizontal size={18} />
-          </button>
-        </div>
-      </section>
-
-      {/* 2. OTHER OPTIONS GRID */}
-      <section className="options-section">
-        <h3 className="section-title">Other options for today</h3>
-        <div className="options-grid">
-          <div className="option-card" onClick={() => onNavigateTab('knowledge')}>
-            <div className="option-icon-wrapper icon-blue">
-              <BookOpen size={20} />
-            </div>
-            <div className="option-info">
-              <h4>Review & Reinforce</h4>
-              <p>Review yesterday's notes and strengthen retention.</p>
-            </div>
-            <div className="option-footer">
-              <span className="option-time">15–20 min</span>
-              <ChevronRight size={16} className="chevron-icon" />
-            </div>
-          </div>
-
-          <div className="option-card" onClick={() => onNavigateTab('projects')}>
-            <div className="option-icon-wrapper icon-green">
-              <Lightbulb size={20} />
-            </div>
-            <div className="option-info">
-              <h4>Switch Project</h4>
-              <p>Work on something else that needs your attention.</p>
-            </div>
-            <div className="option-footer">
-              <span className="option-time">Choose project</span>
-              <ChevronRight size={16} className="chevron-icon" />
-            </div>
-          </div>
-
-          <div className="option-card" onClick={() => onNavigateTab('focus')}>
-            <div className="option-icon-wrapper icon-orange">
-              <Sun size={20} />
-            </div>
-            <div className="option-info">
-              <h4>Reset & Plan</h4>
-              <p>Take a short reset and plan your next steps.</p>
-            </div>
-            <div className="option-footer">
-              <span className="option-time">10 min</span>
-              <ChevronRight size={16} className="chevron-icon" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. RECENT ACTIVITY */}
-      <section className="recent-activity-section">
-        <div className="section-header-row">
-          <h3>Recent Activity</h3>
-          <button className="view-all-link" onClick={() => onNavigateTab('knowledge')}>View all</button>
-        </div>
-
-        <div className="activity-list">
-          <div className="activity-item">
-            <div className="activity-left">
-              <div className="activity-icon icon-purple">
-                <BookOpen size={18} />
-              </div>
-              <div className="activity-details">
-                <span className="activity-title">Database Indexing (Chapter 4)</span>
-                <span className="activity-category">System Design Interview Prep</span>
-              </div>
-            </div>
-            <div className="activity-right">
-              <span className="activity-date">Yesterday</span>
-              <span className="activity-time">8:40 PM</span>
-              <span className="status-badge badge-in-progress">In progress</span>
-            </div>
-          </div>
-
-          <div className="activity-item">
-            <div className="activity-left">
-              <div className="activity-icon icon-green">
-                <FileText size={18} />
-              </div>
-              <div className="activity-details">
-                <span className="activity-title">Sharding vs Partitioning</span>
-                <span className="activity-category">System Design Interview Prep</span>
-              </div>
-            </div>
-            <div className="activity-right">
-              <span className="activity-date">Yesterday</span>
-              <span className="activity-time">7:15 PM</span>
-              <span className="status-badge badge-completed">Completed</span>
-            </div>
-          </div>
-
-          <div className="activity-item">
-            <div className="activity-left">
-              <div className="activity-icon icon-orange">
-                <MessageSquare size={18} />
-              </div>
-              <div className="activity-details">
-                <span className="activity-title">Interview Q&A: Load Balancer</span>
-                <span className="activity-category">AI Chat</span>
-              </div>
-            </div>
-            <div className="activity-right">
-              <span className="activity-date">Yesterday</span>
-              <span className="activity-time">5:30 PM</span>
-              <span className="status-badge badge-discussed">Discussed</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. BOTTOM AI QUICK PROMPT BAR */}
-      <section className="quick-prompt-section">
-        <form onSubmit={handlePromptSubmit} className="prompt-input-container">
-          <input
-            type="text"
-            placeholder="Ask me anything or type / for suggestions..."
-            value={quickPromptText}
-            onChange={(e) => setQuickPromptText(e.target.value)}
-            className="prompt-input-field"
-          />
-          <div className="prompt-actions">
-            <button type="button" className="prompt-icon-btn" title="Voice Input">
-              <Mic size={18} />
-            </button>
-            <button type="submit" className="prompt-send-btn" title="Send">
-              <Send size={16} />
+        {/* PRIMARY CTA: LARGE AI SEARCH/CHAT INPUT */}
+        <form onSubmit={handleHeroSubmit} className="hero-ai-search-form">
+          <div className="hero-search-wrapper">
+            <Sparkles size={20} className="hero-search-sparkle" />
+            <input
+              type="text"
+              className="hero-search-input"
+              placeholder="Ask anything... or describe what you're trying to achieve today."
+              value={heroPromptText}
+              onChange={(e) => setHeroPromptText(e.target.value)}
+            />
+            <button type="submit" className="hero-submit-btn">
+              <span>Ask AI</span>
+              <ArrowRight size={16} />
             </button>
           </div>
         </form>
+      </section>
 
-        <div className="prompt-pills-row">
-          <button 
-            type="button" 
-            className="prompt-pill"
-            onClick={() => handlePillClick('Explain a concept: Database Indexing')}
-          >
-            <Sparkles size={14} className="pill-icon icon-purple" />
-            <span>Explain a concept</span>
-          </button>
+      {/* 2. AI RECOMMENDATION CARD */}
+      <section className="dashboard-section">
+        <RecommendationCard
+          title="Continue System Design?"
+          reasons={[
+            "You completed 3/4 topics yesterday",
+            "You're close to finishing this chapter",
+            "Estimated time: 25 minutes",
+            "Your focus is usually strongest in the morning"
+          ]}
+          onContinue={() => onNavigateTab('chat', 'Continue System Design Interview Prep: Database Indexing (Chapter 4)')}
+          onNotToday={() => onNavigateTab('projects')}
+        />
+      </section>
 
-          <button 
-            type="button" 
-            className="prompt-pill"
-            onClick={() => handlePillClick('Summarize my recent study notes')}
-          >
-            <FileText size={14} className="pill-icon icon-blue" />
-            <span>Summarize this</span>
+      {/* 3. RECENT CONVERSATIONS */}
+      <section className="dashboard-section">
+        <div className="section-title-row">
+          <h3 className="section-heading">Recent Conversations</h3>
+          <button className="section-link-btn" onClick={() => onNavigateTab('chat')}>
+            View all
           </button>
+        </div>
 
-          <button 
-            type="button" 
-            className="prompt-pill"
-            onClick={() => handlePillClick('Break it into 5 actionable learning steps')}
-          >
-            <ZapIcon size={14} className="pill-icon icon-green" />
-            <span>Break it into steps</span>
-          </button>
+        <div className="recent-conversations-list">
+          {sampleRecentConversations.map((conv) => (
+            <ConversationRow
+              key={conv.id}
+              title={conv.title}
+              preview={conv.preview}
+              time={conv.time}
+              icon={MessageSquare}
+              onClick={() => onStartChatPrompt(conv.prompt)}
+            />
+          ))}
+        </div>
+      </section>
 
-          <button 
-            type="button" 
-            className="prompt-pill"
-            onClick={() => handlePillClick('Help me focus and start a 25 minute session')}
-          >
-            <Sun size={14} className="pill-icon icon-orange" />
-            <span>Help me focus</span>
+      {/* 4. PERSONAL AI OBSERVATIONS & INSIGHTS */}
+      <section className="dashboard-section">
+        <div className="section-title-row">
+          <h3 className="section-heading">AI Observations & Learning Patterns</h3>
+          <button className="section-link-btn" onClick={() => onNavigateTab('insights')}>
+            Full insights
           </button>
+        </div>
+
+        <div className="insights-grid-row">
+          <InsightCard
+            title="I'm noticing..."
+            content="You understand concepts faster when real-world code examples come first."
+            subtext="AI mentor has adapted explanations to lead with working code snippets."
+            icon={Lightbulb}
+          />
+
+          <InsightCard
+            title="Your most productive time"
+            content="9:00 – 11:00 AM"
+            subtext="Your retention score is 45% higher during morning focus blocks."
+            icon={Clock}
+          />
+
+          <InsightCard
+            title="Session pacing tip"
+            content="You switch topics after about 20 minutes. Would you like shorter micro-sessions?"
+            actionText="Adjust focus session length"
+            onAction={() => onNavigateTab('focus')}
+            icon={Zap}
+          />
         </div>
       </section>
     </div>
-  );
-}
-
-function ZapIcon({ size, className }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
   );
 }
