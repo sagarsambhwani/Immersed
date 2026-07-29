@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Immersa Premium Light SaaS Theme Palette */
+  --bg-main: #FAFBFD;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-subtle: #F3F4F6;
+  
+  --border-subtle: #EEF2F7;
+  --border-card: #EEF2F7;
+  --border-active: #7C5CFF;
+
+  --text-main: #111827;
+  --text-muted: #6B7280;
+  --text-light: #9CA3AF;
+
+  --accent-purple: #7C5CFF;
+  --accent-purple-light: #F5F3FF;
+  --accent-purple-gradient: linear-gradient(135deg, #7C5CFF 0%, #A78BFA 100%);
+  
+  --accent-blue: #3B82F6;
+  --accent-blue-light: #EFF6FF;
+  
+  --accent-green: #10B981;
+  --accent-green-light: #ECFDF5;
+
+  --accent-orange: #F59E0B;
+  --accent-orange-light: #FFFBEB;
+
+  --radius-card: 24px;
+  --radius-button: 16px;
+  --radius-input: 18px;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 10px 30px rgba(124, 92, 255, 0.08);
+
+  --sidebar-width: 250px;
+  --right-sidebar-width: 320px;
+
+  font-family: 'Inter', 'Geist', 'Plus Jakarta Sans', -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode {
+  --bg-main: #0B0F19;
+  --bg-card: #151C2C;
+  --bg-sidebar: #111726;
+  --bg-subtle: #1E293B;
+  
+  --border-subtle: #1E293B;
+  --border-card: #1E293B;
+
+  --text-main: #F9FAFB;
+  --text-muted: #9CA3AF;
+  --text-light: #6B7280;
+
+  --accent-purple-light: rgba(124, 92, 255, 0.15);
+  --accent-blue-light: rgba(59, 130, 246, 0.15);
+  --accent-green-light: rgba(16, 185, 129, 0.15);
+  --accent-orange-light: rgba(245, 158, 11, 0.15);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 10px 30px rgba(124, 92, 255, 0.15);
+  color-scheme: dark;
+}

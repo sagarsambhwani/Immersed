@@ -1,0 +1,93 @@
+/* ========================================================= */
+/* WIDGETS STYLES (FocusTimer, TaskPlanner, BreathingWidget)*/
+/* ========================================================= */
+
+/* FOCUS TIMER WIDGET */
+.timer-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.plant-stage-display {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+/* TASK PLANNER WIDGET */
+.planner-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.task-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-subtle);
+  transition: all 0.15s ease;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.task-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.task-label.completed {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* BREATHING MASCOT BUBBLE */
+.breathing-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.mascot-bubble {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #a78bfa 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.8rem;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+  transition: transform 3s ease-in-out;
+}
+
+.mascot-bubble.inhale {
+  transform: scale(1.35);
+}
+
+.mascot-bubble.exhale {
+  transform: scale(0.85);
+}
