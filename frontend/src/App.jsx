@@ -115,7 +115,18 @@ export default function App() {
 
   const handleCreateSession = async () => {
     try {
-      const newSession = await createSession();
+      const defaultProvider = localStorage.getItem('default_provider');
+      const defaultModel = localStorage.getItem('default_model');
+      const defaultTemp = localStorage.getItem('default_temperature');
+      const defaultSystemPrompt = localStorage.getItem('default_system_prompt');
+
+      const payload = {};
+      if (defaultProvider) payload.provider = defaultProvider;
+      if (defaultModel) payload.model = defaultModel;
+      if (defaultTemp !== null && defaultTemp !== undefined) payload.temperature = parseFloat(defaultTemp);
+      if (defaultSystemPrompt) payload.system_prompt = defaultSystemPrompt;
+
+      const newSession = await createSession(payload);
       await loadSessions(newSession.id);
       return newSession.id;
     } catch (err) {
@@ -154,6 +165,12 @@ export default function App() {
   };
 
   const handleSaveSettings = async (updatedSettings) => {
+    // Save to localStorage as default settings for future sessions
+    if (updatedSettings.provider) localStorage.setItem('default_provider', updatedSettings.provider);
+    if (updatedSettings.model) localStorage.setItem('default_model', updatedSettings.model);
+    if (updatedSettings.temperature !== undefined) localStorage.setItem('default_temperature', updatedSettings.temperature.toString());
+    if (updatedSettings.system_prompt) localStorage.setItem('default_system_prompt', updatedSettings.system_prompt);
+
     if (!activeSessionId) return;
     try {
       const updated = await updateSession(activeSessionId, updatedSettings);
@@ -164,6 +181,8 @@ export default function App() {
       console.error('Failed to update session settings', err);
     }
   };
+
+  const activeSession = sessions.find((s) => s.id === activeSessionId);
 
   const handleSendMessage = async (text, customSessionId = null) => {
     const targetSessionId = customSessionId || activeSessionId;
@@ -244,7 +263,6 @@ export default function App() {
     setHideRightSidebar(nextVal);
   };
 
-  const activeSession = Array.isArray(sessions) ? sessions.find((s) => s.id === activeSessionId) : undefined;
   const containerClass = `app-container ${hideLeftSidebar ? 'hide-left' : ''} ${hideRightSidebar ? 'hide-right' : ''}`;
 
   return (

@@ -1,0 +1,79 @@
+/* ========================================================= */
+/* INSIGHTS VIEW STYLES                                      */
+/* ========================================================= */
+.insights-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insights-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.insight-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.metric-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.metric-trend {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.insights-detail-banner {
+  background: linear-gradient(135deg, #f5f0ff 0%, #ede9fe 100%);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.banner-left h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-purple);
+}
+.banner-left p {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-top: 2px;
+}
