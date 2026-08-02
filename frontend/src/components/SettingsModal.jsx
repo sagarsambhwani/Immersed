@@ -4,6 +4,7 @@ import { getModels, getSavedKeys, saveKeys } from '../services/api';
 
 export default function SettingsModal({ isOpen, onClose, activeSession, onSave }) {
   const [providersList, setProvidersList] = useState([]);
+  const [showAllKeys, setShowAllKeys] = useState(false);
   
   // Active session parameters
   const [provider, setProvider] = useState('mock');
@@ -19,6 +20,8 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
   const [apiKeyAnthropic, setApiKeyAnthropic] = useState('');
 
   useEffect(() => {
+    if (!isOpen) return;
+
     // 1. Fetch available models from backend
     getModels()
       .then((data) => {
@@ -28,18 +31,31 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
 
     // 2. Fetch local storage keys
     const keys = getSavedKeys();
-    setApiKeyOpenAI(keys.openai);
-    setApiKeyOpenRouter(keys.openrouter);
-    setApiKeyGroq(keys.groq);
-    setApiKeyAnthropic(keys.anthropic);
+    setApiKeyOpenAI(keys.openai || '');
+    setApiKeyOpenRouter(keys.openrouter || '');
+    setApiKeyGroq(keys.groq || '');
+    setApiKeyAnthropic(keys.anthropic || '');
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (activeSession) {
-      setProvider(activeSession.provider);
-      setModel(activeSession.model);
-      setTemperature(activeSession.temperature);
-      setSystemPrompt(activeSession.system_prompt);
+      setProvider(activeSession.provider || 'mock');
+      setModel(activeSession.model || 'mock-gpt');
+      setTemperature(activeSession.temperature !== undefined ? activeSession.temperature : 0.7);
+      setSystemPrompt(activeSession.system_prompt || 'You are a helpful assistant.');
+    } else {
+      // Fallback to saved default settings or initial defaults
+      const defProvider = localStorage.getItem('default_provider') || 'mock';
+      const defModel = localStorage.getItem('default_model') || 'mock-gpt';
+      const defTemp = localStorage.getItem('default_temperature');
+      const defPrompt = localStorage.getItem('default_system_prompt');
+
+      setProvider(defProvider);
+      setModel(defModel);
+      setTemperature(defTemp !== null ? parseFloat(defTemp) : 0.7);
+      setSystemPrompt(defPrompt || 'You are a helpful assistant.');
     }
   }, [activeSession, isOpen]);
 
@@ -50,16 +66,6 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
   const isServerConfigured = activeProviderData ? activeProviderData.is_configured : false;
   const modelsForProvider = activeProviderData ? activeProviderData.models : [];
 
-  // Auto-correct model state if the current model is retired or not in the available models list
-  useEffect(() => {
-    if (modelsForProvider.length > 0) {
-      const modelExists = modelsForProvider.some((m) => m.id === model);
-      if (!modelExists) {
-        setModel(modelsForProvider[0].id);
-      }
-    }
-  }, [provider, providersList, modelsForProvider, model]);
-
   // Handle setting model metadata descriptions dynamically
   useEffect(() => {
     if (activeProviderData && model) {
@@ -68,7 +74,7 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
     } else {
       setModelDescription('');
     }
-  }, [model, provider, providersList, activeProviderData]);
+  }, [model, provider, activeProviderData]);
 
   if (!isOpen) return null;
 
@@ -80,7 +86,7 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
     const provData = providersList.find(
       (p) => p.provider.toLowerCase() === selectedProvider.toLowerCase()
     );
-    if (provData && provData.models.length > 0) {
+    if (provData && provData.models && provData.models.length > 0) {
       setModel(provData.models[0].id);
     } else {
       setModel('');
@@ -105,6 +111,17 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
     });
 
     onClose();
+  };
+
+  const currentProviderLower = provider.toLowerCase();
+  const showOpenAI = showAllKeys || currentProviderLower === 'openai';
+  const showOpenRouter = showAllKeys || currentProviderLower === 'openrouter';
+  const showGroq = showAllKeys || currentProviderLower === 'groq';
+  const showAnthropic = showAllKeys || currentProviderLower === 'anthropic';
+
+  const checkConfigured = (pName) => {
+    const pData = providersList.find((p) => p.provider.toLowerCase() === pName);
+    return pData ? pData.is_configured : false;
   };
 
   return (
@@ -193,74 +210,83 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
           </div>
 
           <hr style={{ borderColor: 'var(--border-glass)' }} />
-          <h4 className="settings-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Key size={14} /> Local API Key Overrides
-          </h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h4 className="settings-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+              <Key size={14} /> Local API Key Overrides
+            </h4>
+            <button 
+              type="button"
+              onClick={() => setShowAllKeys(!showAllKeys)} 
+              style={{ background: 'none', border: 'none', color: 'var(--accent-purple)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+            >
+              {showAllKeys ? 'Hide Other Provider Keys' : 'Show All Provider Keys'}
+            </button>
+          </div>
 
           {/* OpenAI Key */}
-          {provider === 'openai' && (
+          {showOpenAI && (
             <div className="settings-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label className="settings-label" style={{ fontSize: '0.75rem' }}>OpenAI API Key</label>
-                {isServerConfigured && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
+                {checkConfigured('openai') && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
               </div>
               <input 
                 type="password" 
                 className="settings-input" 
                 value={apiKeyOpenAI}
                 onChange={(e) => setApiKeyOpenAI(e.target.value)}
-                placeholder={isServerConfigured ? "Using server key (override optional)" : "sk-proj-..."}
+                placeholder={checkConfigured('openai') ? "Using server key (override optional)" : "sk-proj-..."}
               />
             </div>
           )}
 
           {/* OpenRouter Key */}
-          {provider === 'openrouter' && (
+          {showOpenRouter && (
             <div className="settings-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label className="settings-label" style={{ fontSize: '0.75rem' }}>OpenRouter API Key</label>
-                {isServerConfigured && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
+                {checkConfigured('openrouter') && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
               </div>
               <input 
                 type="password" 
                 className="settings-input" 
                 value={apiKeyOpenRouter}
                 onChange={(e) => setApiKeyOpenRouter(e.target.value)}
-                placeholder={isServerConfigured ? "Using server key (override optional)" : "sk-or-v1-..."}
+                placeholder={checkConfigured('openrouter') ? "Using server key (override optional)" : "sk-or-v1-..."}
               />
             </div>
           )}
 
           {/* Groq Key */}
-          {provider === 'groq' && (
+          {showGroq && (
             <div className="settings-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label className="settings-label" style={{ fontSize: '0.75rem' }}>Groq API Key</label>
-                {isServerConfigured && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
+                {checkConfigured('groq') && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
               </div>
               <input 
                 type="password" 
                 className="settings-input" 
                 value={apiKeyGroq}
                 onChange={(e) => setApiKeyGroq(e.target.value)}
-                placeholder={isServerConfigured ? "Using server key (override optional)" : "gsk_..."}
+                placeholder={checkConfigured('groq') ? "Using server key (override optional)" : "gsk_..."}
               />
             </div>
           )}
 
           {/* Anthropic Key */}
-          {provider === 'anthropic' && (
+          {showAnthropic && (
             <div className="settings-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label className="settings-label" style={{ fontSize: '0.75rem' }}>Anthropic API Key</label>
-                {isServerConfigured && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
+                {checkConfigured('anthropic') && <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '600', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>✓ Configured on Server</span>}
               </div>
               <input 
                 type="password" 
                 className="settings-input" 
                 value={apiKeyAnthropic}
                 onChange={(e) => setApiKeyAnthropic(e.target.value)}
-                placeholder={isServerConfigured ? "Using server key (override optional)" : "sk-ant-..."}
+                placeholder={checkConfigured('anthropic') ? "Using server key (override optional)" : "sk-ant-..."}
               />
             </div>
           )}
