@@ -10,7 +10,8 @@ This document serves as a living, comprehensive technical guide and note-taking 
 - [x] **Phase 2: User Authentication & Multi-Tenancy (JWT / OAuth2 & Bcrypt)**
 - [x] **Phase 3: Process Management & Abuse Protection (Gunicorn Workers & Redis Rate Limiting)**
 - [x] **Phase 4: Backend API Alignment for Frontend Features (Projects, Knowledge, Tasks)**
-- [ ] **Phase 5: Nginx Hardening, TLS & Observability**
+- [x] **Phase 5: Nginx Hardening, TLS & Observability**
+
 
 
 ---
@@ -158,6 +159,31 @@ python -m pytest
 | **Tasks & Focus** | `/api/v1/tasks` | `TaskCreate`, `TaskResponse` | `TaskItem` | Synchronize bite-sized study checklists across client devices |
 
 ---
+
+## 🔒 Phase 5: Nginx Hardening, TLS & Observability
+
+### Why We Built It
+- **Web Tier Protection**: Nginx acts as the front reverse proxy, handling SSL termination, Gzip asset compression, and injecting strict security headers (`CSP`, `HSTS`, `X-Frame-Options`) before forwarding requests to backend workers.
+- **Structured JSON Logging**: Replaced unformatted log prints with `structlog` JSON output pipelines for cloud log aggregation (Elasticsearch / Datadog).
+- **Health Monitoring**: Kubernetes/Cloud-native liveness (`/health/live`) and readiness (`/health/ready`) probes ensure zero-downtime routing.
+
+### Components & Security Features
+- **Security Headers**: Injected `X-Frame-Options DENY`, `X-Content-Type-Options nosniff`, `X-XSS-Protection "1; mode=block"`, `Referrer-Policy`, and `Strict-Transport-Security`.
+- **Gzip Asset Compression**: Level 6 Gzip compression for text, CSS, JSON, and JS streams.
+- **`structlog` Pipeline**: Formats timestamps (`iso`), log levels, and stack traces into JSON.
+- **Readiness Probe**: Validates DB engine (`SELECT 1`) and Redis socket ping before reporting HTTP 200.
+
+### Key Commands Executed
+```bash
+# Install structlog package
+pip install structlog
+
+# Run full test suite including health probes
+python -m pytest
+```
+
+---
+
 
 
 ## 🐛 Error Log & Troubleshooting Archive
