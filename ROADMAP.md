@@ -29,11 +29,12 @@ gantt
 ### Phase 1: High-Performance Database Migration (SQLite ➔ PostgreSQL)
 > **Objective**: Eliminate database file locks and enable high-concurrency database connection pooling.
 
-- [ ] **Dependencies**: Add `psycopg2-binary`, `asyncpg`, and `alembic` to `backend/requirements.txt`.
-- [ ] **Docker Compose**: Add a dedicated `postgres:15-alpine` container with volume persistence.
-- [ ] **Database Connection**: Update `backend/app/config.py` and `backend/app/db/session.py` to support `postgresql+asyncpg://`.
-- [ ] **Migrations**: Initialize Alembic migration scripts to track schema evolution safely.
-- [ ] **Verification**: Run pytest suite against PostgreSQL instance.
+- [x] **Dependencies**: Add `psycopg2-binary`, `asyncpg`, and `alembic` to `backend/requirements.txt`.
+- [x] **Docker Compose**: Add a dedicated `postgres:15-alpine` container with volume persistence.
+- [x] **Database Connection**: Update `backend/app/config.py` and `backend/app/db/session.py` to support `postgresql+asyncpg://`.
+- [x] **Migrations**: Initialize Alembic migration scripts to track schema evolution safely.
+- [x] **Verification**: Run pytest suite against PostgreSQL instance.
+
 
 ---
 
