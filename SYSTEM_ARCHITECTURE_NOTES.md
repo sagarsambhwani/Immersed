@@ -229,3 +229,7 @@ python -m pytest
 #### Q3: Why are we using Gunicorn instead of running Uvicorn directly?
 > **Answer**: Running Uvicorn alone (`uvicorn app.main:app`) runs inside a single process on a single CPU core. In production, we combine **Gunicorn as the Process Master/Supervisor** with **Uvicorn Workers** (`gunicorn -w 4 -k uvicorn.workers.UvicornWorker`). Gunicorn distributes traffic across all available CPU cores, monitors worker process health, and automatically recovers from crashes, while Uvicorn handles asynchronous FastAPI execution inside each worker at maximum speed.
 
+#### Q4: How are LLM provider models and descriptions fetched?
+> **Answer**: Models and descriptions are fetched 100% dynamically at runtime directly from external provider endpoints (`https://openrouter.ai/api/v1/models`, `https://api.openai.com/v1/models`, `https://api.groq.com/openai/v1/models`). No model lists or descriptions are hardcoded in the frontend or backend.
+
+
