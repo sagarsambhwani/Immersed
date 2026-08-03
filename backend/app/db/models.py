@@ -1,16 +1,37 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Text, Float, DateTime, ForeignKey
+from typing import Optional
+from sqlalchemy import String, Text, Float, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default=lambda: datetime.now(timezone.utc)
+    )
+
+    # Relationship to sessions
+    sessions: Mapped[list["ChatSession"]] = relationship(
+        "ChatSession", 
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
@@ -21,7 +42,8 @@ class ChatSession(Base):
     model: Mapped[str] = mapped_column(String(100), default="mock-gpt")
     temperature: Mapped[float] = mapped_column(Float, default=0.7)
 
-    # Relationship to messages
+    # Relationships
+    user: Mapped[Optional[User]] = relationship("User", back_populates="sessions")
     messages: Mapped[list["ChatMessage"]] = relationship(
         "ChatMessage", 
         back_populates="session",
@@ -29,6 +51,7 @@ class ChatSession(Base):
         passive_deletes=True,
         single_parent=True
     )
+
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
