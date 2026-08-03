@@ -9,9 +9,9 @@ This document serves as a living, comprehensive technical guide and note-taking 
 - [x] **Phase 1: High-Performance Database Migration (SQLite ➔ PostgreSQL & Alembic)**
 - [x] **Phase 2: User Authentication & Multi-Tenancy (JWT / OAuth2 & Bcrypt)**
 - [x] **Phase 3: Process Management & Abuse Protection (Gunicorn Workers & Redis Rate Limiting)**
-- [ ] **Phase 4: Backend API Alignment for Frontend Features (Projects, Knowledge, Tasks)**
-
+- [x] **Phase 4: Backend API Alignment for Frontend Features (Projects, Knowledge, Tasks)**
 - [ ] **Phase 5: Nginx Hardening, TLS & Observability**
+
 
 ---
 
@@ -144,6 +144,21 @@ python -m pytest
 ```
 
 ---
+
+## 🎨 Phase 4: Backend API Alignment for Frontend Features
+
+### Why We Built It
+- **Frontend Storage Persistence**: Connected mock React UI tabs (`ProjectsView.jsx`, `InsightsView.jsx`, Focus Timer Checklist) to persistent database tables (`projects`, `knowledge_items`, `task_items`).
+
+### Models & Endpoints Added
+| Feature Area | Router Path | Pydantic Schema | Database Model | Key Operations |
+| :--- | :--- | :--- | :--- | :--- |
+| **Projects API** | `/api/v1/projects` | `ProjectCreate`, `ProjectResponse` | `Project` | CRUD for user study goals, domain parameters, and blueprint JSON data |
+| **Knowledge Base** | `/api/v1/knowledge` | `KnowledgeCreate`, `KnowledgeResponse` | `KnowledgeItem` | Save, tag, and rate mastery score for study notes and summaries |
+| **Tasks & Focus** | `/api/v1/tasks` | `TaskCreate`, `TaskResponse` | `TaskItem` | Synchronize bite-sized study checklists across client devices |
+
+---
+
 
 ## 🐛 Error Log & Troubleshooting Archive
 

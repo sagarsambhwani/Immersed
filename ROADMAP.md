@@ -63,9 +63,10 @@ gantt
 ### Phase 4: Backend API Alignment for Frontend Features
 > **Objective**: Provide persistent database storage for currently mocked UI tabs.
 
-- [ ] **Projects API**: Implement `/api/v1/projects` endpoints + `Project` model in backend.
-- [ ] **Knowledge Base API**: Implement `/api/v1/knowledge` endpoints for saving notes, summaries, and tags.
-- [ ] **Tasks & Focus Timer API**: Implement `/api/v1/tasks` endpoints for cross-device task sync.
+- [x] **Projects API**: Implement `/api/v1/projects` endpoints + `Project` model in backend.
+- [x] **Knowledge Base API**: Implement `/api/v1/knowledge` endpoints for saving notes, summaries, and tags.
+- [x] **Tasks & Focus Timer API**: Implement `/api/v1/tasks` endpoints for cross-device task sync.
+
 
 ---
 
