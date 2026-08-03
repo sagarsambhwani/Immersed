@@ -15,34 +15,37 @@
 
 ```mermaid
 flowchart TD
-    subgraph Client["Frontend (React + Vite)"]
+    subgraph Client["Frontend (React 18 + Vite)"]
         UI["Glassmorphic UI / Single Page App"]
-        LS["Browser LocalStorage\n(API Keys & Preferences)"]
+        LS["Browser LocalStorage\n(JWT Bearer Tokens)"]
         WA["Web Audio API\n(Ambient Noise Synthesizer)"]
     end
 
-    subgraph Server["Backend (FastAPI)"]
-        Router["APIRouter (/api/v1)"]
-        CS["ChatService\n(Async SSE Generator)"]
-        Repo["ChatRepository\n(CRUD Operations)"]
-        DB[(SQLite / PostgreSQL\nchatbot.db)]
+    subgraph WebTier["Hardened Nginx Tier"]
+        Nginx["Nginx Reverse Proxy / SSL\n(Port 80 / 443 & Security Headers)"]
     end
 
-    subgraph External["LLM Providers"]
-        OpenAI["OpenAI (GPT-4o)"]
-        OpenRouter["OpenRouter (Free / Premium)"]
-        Groq["Groq (LPU Acceleration)"]
-        Anthropic["Anthropic (Claude 3.5)"]
-        Mock["Mock Engine (Local Dev)"]
+    subgraph AppTier["FastAPI Multi-Worker Backend"]
+        Gunicorn["Gunicorn Supervisor\n(4 x Uvicorn Workers)"]
+        AuthMiddleware["OAuth2 & JWT Scoping\n(get_current_user)"]
+        RateLimiter["SlowAPI / Redis Limiter\n(60 req/min)"]
+        Structlog["structlog\n(JSON Logging)"]
     end
 
-    UI -->|HTTP / SSE Stream| Router
-    UI <--> LS
-    UI --> WA
-    Router --> CS
-    CS <--> Repo
-    Repo <--> DB
-    CS -->|In-Memory Headers| External
+    subgraph DataTier["Production Storage Tier"]
+        PG[(PostgreSQL 15 Container\nfocusbuddy_postgres)]
+        Redis[(Redis 7 Container\nfocusbuddy_redis)]
+        Alembic["Alembic Migrations\n(Version Control)"]
+    end
+
+    UI -->|HTTP / Bearer Token| Nginx
+    Nginx -->|Reverse Proxy /api/v1| Gunicorn
+    Gunicorn --> AuthMiddleware
+    AuthMiddleware --> RateLimiter
+    RateLimiter <--> Redis
+    RateLimiter --> Structlog
+    Gunicorn <--> PG
+    Alembic --> PG
 ```
 
 ---
@@ -77,11 +80,35 @@ flowchart TD
 
 ---
 
+## ⚡ Enterprise Production Architecture (5 Production Phases)
+
+### 7. Multi-Tenancy & User Authentication (Phase 2)
+* **JWT & OAuth2 Authentication**: Secure registration and login (`/api/v1/auth`) with 7-day JWT access tokens.
+* **Direct Bcrypt Password Hashing**: Cryptographic password hashing ensuring no plaintext passwords are stored.
+* **User-Scoped Multi-Tenancy**: Scopes sessions, projects, knowledge base cards, and tasks to authenticated user accounts.
+
+### 8. Process Scaling & Abuse Protection (Phase 3)
+* **Gunicorn Multi-Worker Supervisor**: 4 Uvicorn worker processes utilizing all CPU cores with automatic worker crash recovery.
+* **Redis Rate Limiting**: `slowapi` rate limiting (60 requests/minute) backed by containerized `redis:7-alpine`.
+
+### 9. Persistent Feature APIs (Phase 4)
+* **Projects & Blueprints API**: `/api/v1/projects` endpoints for study goals and blueprint JSON generation.
+* **Knowledge Base Cards API**: `/api/v1/knowledge` endpoints for saving, tagging, and tracking card mastery scores.
+* **Study Tasks API**: `/api/v1/tasks` endpoints for cross-device checklist synchronization.
+
+### 10. Web Tier Hardening & Observability (Phase 5)
+* **Hardened Nginx Reverse Proxy**: Custom `nginx.conf` injecting strict security headers (`CSP`, `HSTS`, `X-Frame-Options DENY`) and Gzip level 6 compression.
+* **Structured JSON Logging**: `structlog` outputting ISO timestamped JSON logs for cloud aggregation.
+* **Health Probes**: K8s/Cloud-native liveness (`/health/live`) and readiness (`/health/ready`) probes.
+
+
+---
+
 ## 🔒 Security & Privacy Model
 
-* **Zero-Storage Client API Keys**: User-provided LLM API keys (`OpenAI`, `OpenRouter`, `Groq`, `Anthropic`) are **never written to the server database or environment logs**.
-* **Header-Based Overrides**: Keys are stored locally in the browser's `localStorage` and passed per-request via custom HTTP headers (`X-OpenAI-Key`, `X-OpenRouter-Key`, `X-Groq-Key`, `X-Anthropic-Key`).
-* **SQL Injection & CORS Protection**: Built with SQLAlchemy 2.0 parameterized queries and strict CORS origin limits (`CORS_ORIGINS`).
+* **JWT Bearer Authentication**: Auth headers (`Authorization: Bearer <token>`) validate user identity across API routes.
+* **Header-Based LLM Key Overrides**: Custom LLM API keys (`OpenAI`, `OpenRouter`, `Groq`, `Anthropic`) are passed per-request via headers (`X-OpenAI-Key`) and never stored on disk.
+* **SQL Injection & Rate Limit Protection**: SQLAlchemy 2.0 parameterized queries and Redis request counters protect against DDoS spikes.
 
 ---
 
@@ -89,10 +116,13 @@ flowchart TD
 
 | Layer | Technologies Used |
 | :--- | :--- |
-| **Frontend** | React 18, Vite ESM, Vanilla CSS3 (Custom Glassmorphism Design System), Lucide Icons |
-| **Backend** | Python 3.10+, FastAPI, AsyncIO, Pydantic v2, SQLAlchemy 2.0, aiosqlite |
+| **Frontend** | React 18, Vite ESM, Vanilla CSS3 (Glassmorphism Design System), Lucide Icons |
+| **Backend** | Python 3.10+, FastAPI, AsyncIO, Pydantic v2, SQLAlchemy 2.0, Gunicorn, Uvicorn |
+| **Authentication** | JWT (`python-jose`), Direct `bcrypt` password hashing, FastAPI `OAuth2PasswordBearer` |
+| **Database & Cache** | PostgreSQL 15 (`asyncpg`, `psycopg2`), Redis 7, Alembic migrations |
+| **Web & Security** | Nginx Reverse Proxy, `slowapi` rate limiting, `structlog` JSON logging |
 | **LLM Support** | Mock GPT, OpenAI API, OpenRouter API, Groq LPU, Anthropic API |
-| **DevOps** | Docker, Docker Compose, Nginx, Pytest |
+| **DevOps & Infrastructure** | Docker, Docker Compose, Nginx, Pytest |
 
 ---
 
@@ -105,12 +135,12 @@ flowchart TD
    git clone https://github.com/sagarsambhwani/Immersed.git
    cd Immersed
    ```
-2. Launch the services:
+2. Launch full production stack (Nginx, Gunicorn, PostgreSQL, Redis):
    ```bash
    docker-compose up --build
    ```
 3. Access the application:
-   * **Frontend Application**: [http://localhost:3000](http://localhost:3000)
+   * **Nginx Web Application**: [http://localhost](http://localhost)
    * **Backend API Docs (Swagger UI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
@@ -129,14 +159,18 @@ cd backend
 python -m venv .venv
 
 # On Windows:
-.venv\Scripts\activate
+.\.venv\Scripts\activate
 # On macOS/Linux:
 source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
+# Run database migrations
+alembic upgrade head
+
 # Launch FastAPI development server
+python -m pytest
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
@@ -157,18 +191,21 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser!
 
 ## 🧪 Testing
 
-Execute automated unit and endpoint integration tests:
+Execute full automated unit, security, and endpoint integration test suite:
 
 ```bash
 cd backend
-.venv\Scripts\python -m pytest
+.\.venv\Scripts\python -m pytest
 ```
 
 ---
 
-## 🗺️ Production Roadmap
+## 📖 Architecture & Systems Documentation
 
-To view our step-by-step technical plan for enterprise deployment (PostgreSQL migration, JWT multi-tenancy, Gunicorn process scaling, Redis rate limiting), check out [ROADMAP.md](ROADMAP.md).
+To view detailed architectural notes, FAQs, design patterns, and error logs, visit:
+- 📖 [SYSTEM_ARCHITECTURE_NOTES.md](SYSTEM_ARCHITECTURE_NOTES.md) — Comprehensive technical notes & FAQ
+- 🗺️ [ROADMAP.md](ROADMAP.md) — 5-Phase Production Readiness Roadmap
+
 
 ---
 
