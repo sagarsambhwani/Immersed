@@ -4,7 +4,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./chatbot.db"
     
+    # Redis & Rate Limiting Settings
+    REDIS_URL: str = "redis://localhost:6379/0"
+    DEFAULT_RATE_LIMIT: str = "60/minute"
+    
     # LLM Settings
+
     DEFAULT_LLM_PROVIDER: str = "mock"
     DEFAULT_LLM_MODEL: str = "mock-gpt"
     
