@@ -45,6 +45,29 @@ flowchart TD
     Alembic --> PG
 ```
 
+### 🧩 Core Architecture & Design Patterns Identified
+
+| Design Pattern | Implementation in Project | Primary Benefit |
+| :--- | :--- | :--- |
+| **1. Repository Pattern** | `ChatRepository` (`app/db/repository.py`) | Decouples SQL queries and data manipulation from FastAPI endpoints. Allows migrating database engines (SQLite ➔ PostgreSQL) without altering business logic. |
+| **2. Strategy Pattern** | Pluggable LLM Provider Factory (`ChatService`) | Standardizes AI model interfaces across multiple providers (`OpenAI`, `OpenRouter`, `Groq`, `Anthropic`, `Mock`) under a single unified execution contract. |
+| **3. Dependency Injection Pattern** | FastAPI `Depends` (`get_db`, `get_current_user`) | Dynamically injects database transactions and validated user contexts into route handlers, keeping endpoints lightweight and testable. |
+| **4. Master-Worker / Process Supervisor Pattern** | Gunicorn + Uvicorn Workers | Gunicorn manages process health and auto-restart across CPU cores, while Uvicorn workers execute async FastAPI code at maximum performance. |
+| **5. Event-Driven Streaming Pattern** | Server-Sent Events (`send_message_stream`) | Streams real-time AI response tokens over HTTP SSE streams (`text/event-stream`), delivering low-latency feedback to the React UI. |
+| **6. Layered / N-Tier Architecture** | `Presentation` $\rightarrow$ `API Router` $\rightarrow$ `Service Layer` $\rightarrow$ `Repository` $\rightarrow$ `Database` | Strict separation of concerns ensuring every layer is independently testable, maintainable, and reversible. |
+
+---
+
+### 🛡️ FastAPI Middlewares Used in Project
+
+| Middleware | Implementation Location | Purpose & Function |
+| :--- | :--- | :--- |
+| **1. CORS Middleware (`CORSMiddleware`)** | Registered in `app/main.py` | Handles Cross-Origin Resource Sharing (`CORS_ORIGINS`). Permits browser frontend (`http://localhost:5173`) to send HTTP headers, OPTIONS preflight checks, and authorization tokens to the backend on port 8000. |
+| **2. Rate Limiting Middleware (`slowapi`)** | Initialized in `app/core/limiter.py` & `app/main.py` | Intercepts HTTP requests to protected endpoints, evaluates client IP against Redis (or memory fallback), and enforces rate limits (e.g. `60/minute`), returning `429 Too Many Requests` when limits are exceeded. |
+| **3. Custom Exception Middleware** | Registered via `@app.exception_handler` in `app/main.py` | Intercepts application exceptions (`ChatbotException`, `SessionNotFoundException`, `RateLimitExceeded`) and formats standardized JSON error responses. |
+
+
+
 ---
 
 ## 🏗️ Phase 1: Database Migration (SQLite ➔ PostgreSQL & Alembic)
@@ -111,8 +134,16 @@ alembic stamp head
 - **`redis:7-alpine`**: Containerized in-memory data store for rate-limiting counters.
 - **`slowapi`**: Rate limiting middleware for FastAPI backends.
 
----
+### Key Commands Executed
+```bash
+# Install Gunicorn, SlowAPI, and Redis packages
+pip install gunicorn slowapi redis
 
+# Run test suite with rate limiting middleware enabled
+python -m pytest
+```
+
+---
 
 ## 🐛 Error Log & Troubleshooting Archive
 
@@ -135,6 +166,12 @@ alembic stamp head
 - **Error**: `NameError: name 'Union' is not defined`
 - **Root Cause**: Used `Union` annotation in `security.py` without importing `Union` from `typing`.
 - **Fix**: Added `from typing import Optional, Any, Union` to `security.py`.
+
+### 5. Redis Connection Error During Local Pytest Execution
+- **Error**: `redis.exceptions.ConnectionError: Error 10061 connecting to localhost:6379`
+- **Root Cause**: When running `pytest` locally on Windows (where Redis container is not running on localhost:6379), `slowapi` attempting to hit Redis fails.
+- **Fix**: Added a lightweight Redis socket ping check in `backend/app/core/limiter.py` that gracefully falls back to `memory://` in-memory rate limiting when Redis is offline.
+
 
 ---
 
