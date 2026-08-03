@@ -1,11 +1,14 @@
 import json
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request
+
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.repository import ChatRepository
 from app.services.chat_service import ChatService
 from app.schemas.chat import ChatRequest, MessageResponse
+from app.core.limiter import limiter
+from app.config import settings
 from typing import List, Optional
 
 router = APIRouter()
@@ -17,7 +20,9 @@ def get_history(session_id: str, db: Session = Depends(get_db)):
     return repo.get_session_messages(session_id)
 
 @router.post("/{session_id}")
+@limiter.limit(settings.DEFAULT_RATE_LIMIT)
 async def send_message(
+    request: Request,
     session_id: str,
     chat_req: ChatRequest,
     db: Session = Depends(get_db),
@@ -26,6 +31,7 @@ async def send_message(
     x_groq_key: Optional[str] = Header(None, alias="X-Groq-Key"),
     x_anthropic_key: Optional[str] = Header(None, alias="X-Anthropic-Key")
 ):
+
     """
     Send a message to the chatbot.
     Supports either synchronous JSON response or Server-Sent Events (SSE) stream.

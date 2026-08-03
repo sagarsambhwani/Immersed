@@ -3,9 +3,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.api.v1.router import api_router
 from app.core.exceptions import ChatbotException
+from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import engine
 import app.db.models  # Ensure models are imported for metadata mapping
@@ -26,6 +29,11 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Attach Rate Limiter state & exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 # CORS Middleware Setup
 app.add_middleware(
