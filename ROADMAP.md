@@ -41,10 +41,11 @@ gantt
 ### Phase 2: User Authentication & Multi-Tenancy (JWT / OAuth2)
 > **Objective**: Protect user sessions and isolate chat histories per user account.
 
-- [ ] **Data Model**: Add `user_id` foreign key column to `chat_sessions` table.
-- [ ] **Auth Module**: Create `backend/app/api/v1/endpoints/auth.py` with `/register` and `/token` (login) endpoints using `python-jose` and `passlib` (bcrypt).
-- [ ] **Multi-Tenant Scoping**: Filter all `ChatRepository` methods (`get_sessions`, `get_session`, `create_session`) by current authenticated `user_id`.
+- [x] **Data Model**: Add `users` table and `user_id` foreign key column to `chat_sessions` table.
+- [x] **Auth Module**: Create `backend/app/api/v1/endpoints/auth.py` with `/register`, `/login`, and `/token` endpoints using `python-jose` and `bcrypt`.
+- [x] **Multi-Tenant Scoping**: Filter `ChatRepository` methods (`get_sessions`, `get_session`, `create_session`) by authenticated `user_id`.
 - [ ] **Frontend Integration**: Implement Auth Modal / Token Interceptor in `frontend/src/services/api.js`.
+
 
 ---
 
