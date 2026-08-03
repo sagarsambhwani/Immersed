@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+
 
 // Helper to retrieve API keys securely stored in localStorage
 export function getSavedKeys() {
@@ -79,13 +80,16 @@ export async function getSessionMessages(sessionId) {
   return response.json();
 }
 
-export async function getModels() {
-  const response = await fetch(`${API_BASE}/models/`);
+export async function getModels(customKeys = null) {
+  const keys = customKeys || getSavedKeys();
+  const headers = getHeaders(keys);
+  const response = await fetch(`${API_BASE}/models/`, { headers });
   if (!response.ok) {
     throw new Error("Failed to fetch models");
   }
   return response.json();
 }
+
 
 export async function sendMessageStream(
   sessionId, 
