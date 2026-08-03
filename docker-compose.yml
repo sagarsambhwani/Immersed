@@ -1,16 +1,35 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: focusbuddy_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: chatbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      - sqlite_data:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      - DATABASE_URL=sqlite:///./chatbot.db
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/chatbot
       - DEFAULT_LLM_PROVIDER=mock
       - DEFAULT_LLM_MODEL=mock-gpt
     restart: always
@@ -26,4 +45,5 @@ services:
     restart: always
 
 volumes:
-  sqlite_data:
+  postgres_data:
+
