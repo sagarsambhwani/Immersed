@@ -21,11 +21,15 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Initializing Immersed FastAPI Backend Server...")
     def init_tables():
-        Base.metadata.create_all(bind=engine)
+        try:
+            Base.metadata.create_all(bind=engine)
+        except Exception as e:
+            logger.warning("Table initialization caught expected parallel worker race condition", error=str(e))
     await asyncio.to_thread(init_tables)
     yield
     engine.dispose()
     logger.info("Server shutdown complete.")
+
 
 app = FastAPI(
     title="Scalable Generic Chatbot API",
