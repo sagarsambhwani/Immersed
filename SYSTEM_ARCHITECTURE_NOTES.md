@@ -8,8 +8,9 @@ This document serves as a living, comprehensive technical guide and note-taking 
 
 - [x] **Phase 1: High-Performance Database Migration (SQLite ➔ PostgreSQL & Alembic)**
 - [x] **Phase 2: User Authentication & Multi-Tenancy (JWT / OAuth2 & Bcrypt)**
-- [ ] **Phase 3: Process Management & Abuse Protection (Gunicorn Workers & Redis Rate Limiting)**
+- [x] **Phase 3: Process Management & Abuse Protection (Gunicorn Workers & Redis Rate Limiting)**
 - [ ] **Phase 4: Backend API Alignment for Frontend Features (Projects, Knowledge, Tasks)**
+
 - [ ] **Phase 5: Nginx Hardening, TLS & Observability**
 
 ---
@@ -95,6 +96,24 @@ alembic stamp head
 
 ---
 
+## ⚡ Phase 3: Process Management & Abuse Protection (Gunicorn & Redis)
+
+### Why We Built It
+- **Multi-Core Scaling**: Running `uvicorn` directly limits FastAPI execution to a single CPU core in a single process. Combining **Gunicorn Master Supervisor** with **Uvicorn Workers** (`gunicorn -w 4 -k uvicorn.workers.UvicornWorker`) utilizes all CPU cores and automatically recovers if a worker crashes.
+- **Abuse Protection & Rate Limiting**: Integrating containerized **Redis** (`redis:7-alpine`) and **`slowapi`** middleware protects downstream LLM API keys from DDoS traffic, billing spikes, and automated scraping.
+
+### Architecture: Gunicorn Supervisor vs Uvicorn Workers
+- **Gunicorn (Master Process)**: Supervises worker process health, distributes incoming requests across CPU cores, and instantly restarts dead worker processes.
+- **Uvicorn Workers (`UvicornWorker`)**: Async worker processes executing FastAPI endpoints and SSE streams inside each CPU core at maximum speed.
+
+### Technologies Used
+- **`gunicorn`**: Production WSGI/ASGI HTTP process manager.
+- **`redis:7-alpine`**: Containerized in-memory data store for rate-limiting counters.
+- **`slowapi`**: Rate limiting middleware for FastAPI backends.
+
+---
+
+
 ## 🐛 Error Log & Troubleshooting Archive
 
 ### 1. SQLite ALTER Constraint Error
@@ -128,3 +147,7 @@ alembic stamp head
 
 #### Q2: What happens if a user visits without logging in?
 > **Answer**: The `user_id` column on `chat_sessions` is nullable (`nullable=True`), allowing guest/unauthenticated chats to function seamlessly alongside authenticated user accounts.
+
+#### Q3: Why are we using Gunicorn instead of running Uvicorn directly?
+> **Answer**: Running Uvicorn alone (`uvicorn app.main:app`) runs inside a single process on a single CPU core. In production, we combine **Gunicorn as the Process Master/Supervisor** with **Uvicorn Workers** (`gunicorn -w 4 -k uvicorn.workers.UvicornWorker`). Gunicorn distributes traffic across all available CPU cores, monitors worker process health, and automatically recovers from crashes, while Uvicorn handles asynchronous FastAPI execution inside each worker at maximum speed.
+

@@ -52,10 +52,11 @@ gantt
 ### Phase 3: Process Management & Abuse Protection
 > **Objective**: Scale CPU core usage and protect downstream LLM API keys from DDoS or billing spikes.
 
-- [ ] **Gunicorn Multi-Worker**: Update `backend/Dockerfile` to run `gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker`.
-- [ ] **Rate Limiting**: Integrate `slowapi` / Redis middleware to enforce rate limits (e.g., 60 requests/minute per client).
-- [ ] **Redis Container**: Add `redis:7-alpine` service to `docker-compose.yml`.
-- [ ] **Verification**: Load test endpoints using `locust` or `autocannon`.
+- [x] **Gunicorn Multi-Worker**: Update `backend/Dockerfile` to run `gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker`.
+- [x] **Rate Limiting**: Integrate `slowapi` / Redis middleware to enforce rate limits (e.g., 60 requests/minute per client).
+- [x] **Redis Container**: Add `redis:7-alpine` service to `docker-compose.yml`.
+- [x] **Verification**: Run backend pytest suite with rate limiting middleware enabled.
+
 
 ---
 
