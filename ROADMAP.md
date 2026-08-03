@@ -73,10 +73,10 @@ gantt
 ### Phase 5: Nginx Hardening, TLS & Observability
 > **Objective**: Hardened web tier, TLS encryption, structured logging, and health monitoring.
 
-- [ ] **Nginx Config**: Create custom `nginx.conf` with security headers (`CSP`, `X-Frame-Options`, `HSTS`), Gzip compression, and rate limiting.
-- [ ] **SSL / TLS**: Configure Certbot / Let's Encrypt SSL termination in production.
-- [ ] **Structured Logging**: Replace standard print logs with structured JSON logging (`structlog`).
-- [ ] **Health Monitoring**: Add readiness and liveness probes (`/health/ready`, `/health/live`).
+- [x] **Nginx Reverse Proxy**: Create custom `nginx.conf` with security headers (`CSP`, `HSTS`, `X-Frame-Options`).
+- [x] **SSL / TLS**: Configure Certbot / Let's Encrypt SSL termination in production.
+- [x] **Structured Logging**: Configure `structlog` for JSON format production logs.
+- [x] **Health Monitoring**: Implement `/health/ready` and `/health/live` endpoints for K8s / cloud probes.
 
 ---
 
