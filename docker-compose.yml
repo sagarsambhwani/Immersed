@@ -37,20 +37,30 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: focusbuddy_backend
     ports:
       - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://focusbuddy_user:focusbuddy_password@postgres:5432/focusbuddy_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-production-jwt-secret-key-focusbuddy
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/chatbot
-      - REDIS_URL=redis://redis:6379/0
-      - DEFAULT_LLM_PROVIDER=mock
-      - DEFAULT_LLM_MODEL=mock-gpt
     restart: always
 
+  nginx:
+    image: nginx:alpine
+    container_name: focusbuddy_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
 
   frontend:
     build:
