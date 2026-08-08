@@ -153,3 +153,79 @@ export async function sendMessageStream(
     onError(err);
   }
 }
+
+// Projects API
+export async function getProjects() {
+  const response = await fetch(`${API_BASE}/projects/`);
+  if (!response.ok) throw new Error("Failed to fetch projects");
+  return response.json();
+}
+
+export async function createProject(payload) {
+  const response = await fetch(`${API_BASE}/projects/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to create project");
+  return response.json();
+}
+
+export async function deleteProject(projectId) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete project");
+  return true;
+}
+
+// Adaptive Intent -> Action Decomposition Engine API
+export async function startProjectWorkflow(projectId, payload) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/workflow/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to start workflow");
+  }
+  return response.json();
+}
+
+export async function getProjectWorkflow(projectId) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to load workflow state");
+  }
+  return response.json();
+}
+
+export async function resumeWorkflowStep(projectId, payload) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/workflow/resume`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Server returned ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function evolveWorkflowStep(projectId, payload) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/workflow/evolve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Server returned ${response.status}`);
+  }
+  return response.json();
+}
+
+
