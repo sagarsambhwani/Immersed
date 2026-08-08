@@ -11,6 +11,9 @@ This document serves as a living, comprehensive technical guide and note-taking 
 - [x] **Phase 3: Process Management & Abuse Protection (Gunicorn Workers & Redis Rate Limiting)**
 - [x] **Phase 4: Backend API Alignment for Frontend Features (Projects, Knowledge, Tasks)**
 - [x] **Phase 5: Nginx Hardening, TLS & Observability**
+- [x] **Phase 6: Agentic AI Workflow (Adaptive Project Design & Evolution System)**
+
+
 
 
 
@@ -183,6 +186,40 @@ python -m pytest
 ```
 
 ---
+
+## 🤖 Phase 6: Adaptive Intent → Action Decomposition Engine
+
+### Why We Built It
+- **Beyond Project Management**: Users bring arbitrary intentions (learning quantum mechanics, investigating a preconceived belief, curating an art gallery, drafting a LinkedIn post, building software, or planning a portfolio).
+- **The Solution**: An AI-powered externalization engine that turns fuzzy human intent into an evolving, understandable hierarchy of doable steps (Learn → Think → Decide → Create → Do → Check → Reflect), presenting one actionable step at a time and adapting when the user changes direction while preserving completed history.
+
+### Components & Architecture
+- **AI Proposal Engine (`app/services/workflow_engine.py` - `AIProposalEngine`)**: Decomposes arbitrary human intentions into phased hierarchies and active interrupts (questions, choices, reviews, approvals, actions, reflections, validations, freeform).
+- **Goal → Phase → Task → Interaction Architecture (`app/services/workflow_engine.py`)**:
+  - **Complete Mutation Identity Hashing**: Idempotency checks compute `sha256(canonical_json({ project_id, checkpoint_id, expected_version, operation_type, resume_data }))` to prevent cross-checkpoint collision.
+  - **Selective AI Invocation**: Fast deterministic state machine transitions for routine task advances; AI proposal engine invoked specifically for intent decomposition, ambiguity resolution, and direction changes.
+  - **Immutable Historical Facts vs. Adaptable Future Interpretation**: Completed task history remains permanently immutable, while future uncompleted phases adapt dynamically upon direction changes.
+  - **Three-Dimensional Versioning**: `workflow_version` (concurrency locking), `plan_version` (evolution changes), and `task_id` / `checkpoint_id` (immutable identity).
+- **RESTful Resource API (`app/api/v1/endpoints/workflow.py`)**:
+  - `POST /api/v1/projects/{project_id}/workflow/start`
+  - `GET /api/v1/projects/{project_id}/workflow`
+  - `GET /api/v1/projects/{project_id}/workflow/events`
+  - `POST /api/v1/projects/{project_id}/workflow/resume` (with `409 Conflict`, `422 Unprocessable`, `200 OK` semantics)
+  - `POST /api/v1/projects/{project_id}/workflow/evolve` (versioned plan adaptation)
+- **Human-Centric React UI (`AdaptiveWorkflow.jsx`, `ActiveStepCard.jsx`, `WorkflowTree.jsx`)**: Displays visual phase breadcrumb, dominant active step card (*What? Why? What happens next?*), collapsible list-of-lists tree, and "Change direction" evolution popover.
+
+### Key Commands Executed
+```bash
+# Execute defensive backend test suite for workflow state machine & endpoints
+.venv\Scripts\python.exe -m pytest backend/tests/test_workflow.py
+```
+
+---
+
+
+
+
+
 
 
 
