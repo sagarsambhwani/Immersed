@@ -18,7 +18,9 @@ import {
   deleteSession,
   updateSession,
   getSessionMessages,
+  sendMessageStream,
 } from './services/api';
+
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -200,10 +202,10 @@ export default function App() {
     setIsGenerating(true);
     setStreamingContent('');
 
-    const { sendMessageStream } = await import('./services/api');
     let currentAccumulated = '';
 
     await sendMessageStream(
+
       targetSessionId,
       text,
       (chunk) => {
@@ -312,6 +314,7 @@ export default function App() {
           {activeTab === 'chat' && (
             <ChatWindow
               activeSession={activeSession}
+              onCreateSession={handleCreateSession}
               messages={messages}
               streamingContent={streamingContent}
               isGenerating={isGenerating}
@@ -320,6 +323,7 @@ export default function App() {
               onToggleFocusMode={handleToggleFocusMode}
             />
           )}
+
 
           {activeTab === 'knowledge' && (
             <KnowledgeView onStartChatPrompt={handleStartChatPrompt} />

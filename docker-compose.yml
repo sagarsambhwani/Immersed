@@ -41,10 +41,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://focusbuddy_user:focusbuddy_password@postgres:5432/focusbuddy_db
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/chatbot
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=your-production-jwt-secret-key-focusbuddy
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+
     depends_on:
       postgres:
         condition: service_healthy

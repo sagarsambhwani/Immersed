@@ -65,6 +65,7 @@ const FOLLOW_UP_PILLS = [
 
 export default function ChatWindow({
   activeSession,
+  onCreateSession,
   messages,
   streamingContent,
   isGenerating,
@@ -86,11 +87,27 @@ export default function ChatWindow({
     scrollToBottom();
   }, [messages, streamingContent]);
 
+  const handleAutoCreateAndSend = async (textToSend) => {
+    if (isGenerating || !textToSend.trim()) return;
+    if (onCreateSession) {
+      const newId = await onCreateSession();
+      if (newId) {
+        setTimeout(() => {
+          onSendMessage(textToSend, newId);
+        }, 150);
+      }
+    }
+  };
+
   const handleSubmit = (e) => {
     e?.preventDefault();
-    if (inputText.trim() && !isGenerating) {
-      onSendMessage(inputText.trim());
-      setInputText('');
+    if (!inputText.trim() || isGenerating) return;
+    const text = inputText.trim();
+    setInputText('');
+    if (!activeSession) {
+      handleAutoCreateAndSend(text);
+    } else {
+      onSendMessage(text);
     }
   };
 
@@ -102,29 +119,114 @@ export default function ChatWindow({
   };
 
   const handleQuickAction = (prefix) => {
-    setInputText(prefix);
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (!activeSession) {
+      handleAutoCreateAndSend(prefix + '...');
+    } else {
+      setInputText(prefix);
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
   const handlePillClick = (pillText) => {
     if (!isGenerating) {
-      onSendMessage(pillText);
+      if (!activeSession) {
+        handleAutoCreateAndSend(pillText);
+      } else {
+        onSendMessage(pillText);
+      }
     }
   };
 
   if (!activeSession) {
     return (
       <div className="chat-container">
-        <div className="empty-chat-buddy">
-          <Bot className="empty-icon" style={{ width: '64px', height: '64px', strokeWidth: 1.2, color: 'var(--accent-purple)' }} />
-          <h2>Welcome to FocusBuddy</h2>
-          <p>Your friendly ADHD-friendly teaching assistant. Create a chat session to start learning one small step at a time.</p>
+        <header className="chat-header">
+          <div>
+            <div className="greeting-text">Welcome to FocusBuddy 👋</div>
+            <div className="greeting-subtext">Your friendly ADHD-friendly teaching assistant.</div>
+          </div>
+          <div className="chat-header-actions">
+            <button 
+              className="focus-toggle-btn active"
+              onClick={onCreateSession}
+              style={{ background: 'var(--accent-purple)', color: '#ffffff' }}
+            >
+              <Plus size={16} />
+              <span>+ Start New Chat</span>
+            </button>
+          </div>
+        </header>
+
+        <div className="message-feed">
+          <div className="empty-chat-buddy">
+            <Bot className="empty-icon" style={{ width: '64px', height: '64px', strokeWidth: 1.2, color: 'var(--accent-purple)' }} />
+            <h2>Start a New Learning Session</h2>
+            <p style={{ marginBottom: '20px' }}>Click below to create a session, or choose a quick shortcut.</p>
+            
+            <button 
+              type="button" 
+              className="chat-send-btn" 
+              onClick={onCreateSession}
+              style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', margin: '0 auto 24px auto', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Plus size={18} />
+              <span>Create New Chat Session</span>
+            </button>
+
+            <div className="quick-actions-row">
+              {QUICK_ACTIONS.map((action) => (
+                <div 
+                  key={action.id} 
+                  className="quick-action-card"
+                  onClick={() => handleQuickAction(action.prefix)}
+                >
+                  <div className="quick-action-icon" style={{ background: action.bg, color: action.color }}>
+                    {action.icon}
+                  </div>
+                  <div className="quick-action-title">{action.title}</div>
+                  <div className="quick-action-desc">{action.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="chat-input-area">
+          <form onSubmit={handleSubmit} className="chat-input-wrapper">
+            <button type="button" className="chat-input-icon-btn" title="Add shortcut"><Plus size={18} /></button>
+            <button type="button" className="chat-input-icon-btn" title="Attach file"><Paperclip size={18} /></button>
+            <button type="button" className="chat-input-icon-btn" title="Web search"><Globe size={18} /></button>
+            
+            <textarea
+              ref={inputRef}
+              className="chat-textarea"
+              placeholder="Ask FocusBuddy anything (creates new session automatically)..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            
+            <button type="button" className="chat-input-icon-btn" title="Voice dictation"><Mic size={18} /></button>
+            
+            <button
+              type="submit"
+              className="chat-send-btn"
+              disabled={!inputText.trim()}
+            >
+              <Send size={15} />
+            </button>
+          </form>
+          
+          <div className="chat-footer-tip">
+            <span>💡 Tip: Type your question above to start learning immediately!</span>
+          </div>
         </div>
       </div>
     );
   }
+
 
   // Determine the last assistant message index
   const lastAssistantIndex = [...messages].reverse().findIndex(msg => msg.role === 'assistant');

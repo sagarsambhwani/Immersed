@@ -8,12 +8,19 @@ import {
   BarChart2, 
   FileText, 
   Target, 
-  Settings
+  Settings,
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 export default function Sidebar({
   activeTab,
   onSelectTab,
+  sessions = [],
+  activeSessionId,
+  onSelectSession,
+  onCreateSession,
+  onDeleteSession,
   onOpenSettings,
   userProfile = { name: 'Aryan', email: 'aryan@immersa.ai' }
 }) {
@@ -61,14 +68,66 @@ export default function Sidebar({
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button
-                key={item.id}
-                className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => handleItemClick(item)}
-              >
-                <Icon size={18} className="nav-item-icon" />
-                <span className="nav-item-label">{item.label}</span>
-              </button>
+              <React.Fragment key={item.id}>
+                <button
+                  className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+                  onClick={() => handleItemClick(item)}
+                >
+                  <Icon size={18} className="nav-item-icon" />
+                  <span className="nav-item-label">{item.label}</span>
+                  {item.id === 'chat' && (
+                    <span 
+                      className="create-session-plus-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectTab('chat');
+                        if (onCreateSession) onCreateSession();
+                      }}
+                      title="Create New Chat"
+                      style={{ marginLeft: 'auto', padding: '2px', cursor: 'pointer' }}
+                    >
+                      <Plus size={14} />
+                    </span>
+                  )}
+                </button>
+
+                {/* Sub-list of Chat Sessions under AI Chat */}
+                {item.id === 'chat' && activeTab === 'chat' && (
+                  <div className="sidebar-sessions-sublist" style={{ paddingLeft: '12px', margin: '4px 0' }}>
+                    <button
+                      className="sidebar-nav-item sub-item new-chat-btn"
+                      onClick={onCreateSession}
+                      style={{ fontSize: '12px', color: 'var(--accent-purple)', fontWeight: 600 }}
+                    >
+                      <Plus size={14} />
+                      <span>+ New Session</span>
+                    </button>
+                    {Array.isArray(sessions) && sessions.map((sess) => (
+
+                      <div
+                        key={sess.id}
+                        className={`sidebar-nav-item sub-item ${sess.id === activeSessionId ? 'active' : ''}`}
+                        onClick={() => onSelectSession(sess.id)}
+                        style={{ fontSize: '12px', justifyContent: 'space-between' }}
+                      >
+                        <span className="nav-item-label" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }}>
+                          {sess.title || 'Untitled Chat'}
+                        </span>
+                        {onDeleteSession && (
+                          <Trash2
+                            size={12}
+                            style={{ opacity: 0.5, cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteSession(sess.id);
+                            }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -112,3 +171,4 @@ export default function Sidebar({
     </aside>
   );
 }
+

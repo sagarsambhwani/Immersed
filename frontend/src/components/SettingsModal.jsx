@@ -4,6 +4,7 @@ import { getModels, getSavedKeys, saveKeys } from '../services/api';
 
 export default function SettingsModal({ isOpen, onClose, activeSession, onSave }) {
   const [providersList, setProvidersList] = useState([]);
+
   const [showAllKeys, setShowAllKeys] = useState(false);
   
   // Active session parameters
@@ -22,19 +23,21 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
   useEffect(() => {
     if (!isOpen) return;
 
-    // 1. Fetch available models from backend
-    getModels()
-      .then((data) => {
-        setProvidersList(data);
-      })
-      .catch((err) => console.error('Failed to load supported LLM models', err));
-
-    // 2. Fetch local storage keys
+    // 1. Fetch saved keys
     const keys = getSavedKeys();
     setApiKeyOpenAI(keys.openai || '');
     setApiKeyOpenRouter(keys.openrouter || '');
     setApiKeyGroq(keys.groq || '');
     setApiKeyAnthropic(keys.anthropic || '');
+
+    // 2. Dynamically fetch available models from API with current keys
+    getModels(keys)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProvidersList(data);
+        }
+      })
+      .catch((err) => console.error('Failed to load supported LLM models', err));
   }, [isOpen]);
 
   useEffect(() => {
@@ -46,7 +49,6 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
       setTemperature(activeSession.temperature !== undefined ? activeSession.temperature : 0.7);
       setSystemPrompt(activeSession.system_prompt || 'You are a helpful assistant.');
     } else {
-      // Fallback to saved default settings or initial defaults
       const defProvider = localStorage.getItem('default_provider') || 'mock';
       const defModel = localStorage.getItem('default_model') || 'mock-gpt';
       const defTemp = localStorage.getItem('default_temperature');
@@ -60,11 +62,12 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
   }, [activeSession, isOpen]);
 
   // Filter models for the currently selected provider
-  const activeProviderData = providersList.find(
-    (p) => p.provider.toLowerCase() === provider.toLowerCase()
-  );
+  const activeProviderData = Array.isArray(providersList) ? providersList.find(
+    (p) => p && p.provider && p.provider.toLowerCase() === provider.toLowerCase()
+  ) : null;
   const isServerConfigured = activeProviderData ? activeProviderData.is_configured : false;
-  const modelsForProvider = activeProviderData ? activeProviderData.models : [];
+  const modelsForProvider = (activeProviderData && Array.isArray(activeProviderData.models)) ? activeProviderData.models : [];
+
 
   // Handle setting model metadata descriptions dynamically
   useEffect(() => {
@@ -95,14 +98,22 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
 
   const handleSave = () => {
     // 1. Save keys to localStorage
-    saveKeys({
+    const keysObj = {
       openai: apiKeyOpenAI,
       openrouter: apiKeyOpenRouter,
       groq: apiKeyGroq,
       anthropic: apiKeyAnthropic,
-    });
+    };
+    saveKeys(keysObj);
 
-    // 2. Trigger session updates
+    // 2. Trigger dynamic model re-fetch with new keys
+    getModels(keysObj)
+      .then((data) => {
+        if (Array.isArray(data)) setProvidersList(data);
+      })
+      .catch(() => {});
+
+    // 3. Trigger session updates
     onSave({
       provider,
       model,
@@ -142,14 +153,20 @@ export default function SettingsModal({ isOpen, onClose, activeSession, onSave }
               className="settings-select" 
               value={provider} 
               onChange={handleProviderChange}
+              disabled={providersList.length === 0}
             >
-              {providersList.map((p) => (
-                <option key={p.provider} value={p.provider}>
-                  {p.provider.toUpperCase()}
-                </option>
-              ))}
+              {providersList.length === 0 ? (
+                <option value="">Loading providers from API...</option>
+              ) : (
+                providersList.map((p) => (
+                  <option key={p.provider} value={p.provider}>
+                    {p.provider.toUpperCase()} {p.is_configured ? '✓' : '(Key required)'}
+                  </option>
+                ))
+              )}
             </select>
           </div>
+
 
           {/* 2. Model Select */}
           <div className="settings-group">

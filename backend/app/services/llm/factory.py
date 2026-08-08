@@ -3,6 +3,7 @@ from app.services.llm.base import BaseLLMProvider
 from app.services.llm.mock_provider import MockProvider
 from app.services.llm.openai_compatible import OpenAICompatibleProvider
 from app.services.llm.anthropic_provider import AnthropicProvider
+from app.services.llm.gemini_provider import GeminiProvider
 from app.core.exceptions import ConfigurationException
 
 class LLMFactory:
@@ -14,6 +15,9 @@ class LLMFactory:
         
         if name == "mock":
             return MockProvider()
+
+        elif name == "gemini" or name == "google":
+            return GeminiProvider(default_api_key=settings.GEMINI_API_KEY)
             
         elif name == "openai":
             return OpenAICompatibleProvider(
